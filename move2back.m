@@ -11,6 +11,6 @@ for i=1:n_axkids
     end
 end
 if isempty(ih), error('handle(%f) not a child of hax(%f)', h, hax); end
-if ih < n_axkids
-  new_axkids(1:(ih-1)) = axkids(1:(ih-1));
-end
+neworder = setdiff(axkids,axkids(i));
+new_axkids = [neworder' axkids(i)];
+set(hax,'Children',new_axkids');

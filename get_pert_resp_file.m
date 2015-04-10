@@ -1,5 +1,5 @@
 function the_pert_resp_file = get_pert_resp_file()
-
+mainfolder = pwd;
 consolidate_block_found = 0;
 exprdirs = dir('expr*');
 for iexprdir = 1:length(exprdirs)
@@ -15,6 +15,14 @@ for iexprdir = 1:length(exprdirs)
   if consolidate_block_found
     break;
   end
+       
 end
+
+if ~consolidate_block_found
+      the_pert_resp_file = sprintf('%s/speak_consolidate_audiodir/pert_resp.mat',mainfolder);
+end
+  
+if consolidate_block_found
 fprintf('consolidate_block_found(%d)\n',consolidate_block_found);
 the_pert_resp_file = sprintf('%s/speak/consolidate_block/pert_resp.mat',exprdirs(iexprdir).name);
+end

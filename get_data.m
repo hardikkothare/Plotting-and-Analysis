@@ -1,7 +1,7 @@
 yes_reload = 0;
 if yes_reload || ~exist('num','var')
   clear all
-  [num,txt,raw] = xlsread('vosselinfo_copy.xlsx');
+  [num,txt,raw] = xlsread('vosselinfo_copy.xls');
   [numrows,numcols] = size(num);
   num = [NaN*ones(1,numcols); num];
   [numrows,numcols] = size(num);
@@ -12,6 +12,22 @@ icol4order = strmatch('expr order',txt(1,:));
 icol4type = strmatch('Type',txt(1,:));
 icol4comp = strmatch('mean_comp',txt(1,:));
 icol4stde = strmatch('stde_comp',txt(1,:));
+
+if ~ispc
+    datecolumn = raw(:,icol4date);
+    numbervalues = cellfun(@(V) any(isnumeric(V(:)) && ~isnan(V(:))), datecolumn)';
+    datedata = datecolumn(numbervalues,1);
+    correcteddatedata = cellfun(@(V) V-1+693961, datedata);
+    converteddatedata = datestr(correcteddatedata,'mm/dd/yyyy');
+    cellsconverteddatedata = cellstr(converteddatedata);
+    
+    firstdatesindices = find(numbervalues == 1,1,'first');
+    lastdatesindices = find(numbervalues == 1,1,'last');
+    datecolumn(firstdatesindices:lastdatesindices,1) = cellsconverteddatedata;
+    raw(:,icol4date) = datecolumn;
+    [row_w col_l] = size(txt);
+    txt(:,icol4date) = datecolumn(1:row_w,1);
+end
 
 irows4comp = find(~isnan(num(:,icol4comp)));
 nrows4comp = length(irows4comp);
@@ -36,16 +52,23 @@ for ipert = 1:2
 end
 curdir = cd;
 fprintf('patients:\n');
+cd('Patients');
 for iexpr = 1:nrows4patients
-  cd(Patients);
   the_expr_dir = date_to_dir(txt,num,irows4patients,icol4date,icol4order,iexpr);
   cd(the_expr_dir);
   the_pert_resp_file = get_pert_resp_file();
   fprintf('load(the_pert_resp_file)...'); pause(0.2); load(the_pert_resp_file); fprintf('done\n');
-  patient_dat.pert_resp(iexpr) = pert_resp;
+  patient_dat.pert_resp(iexpr).nframeswin = 310;
+  patient_dat.pert_resp(iexpr).n_good_trials = pert_resp.n_good_trials;
+  
+  pert_resp.frame_taxis_zero_point = dsearchn(pert_resp.frame_taxis',0)
+  
+  patient_dat.pert_resp(iexpr).cents4comp.pitch_in.dat{1} = pert_resp.cents4comp.pitch_in.dat{1}(:,pert_resp.frame_taxis_zero_point:pert_resp.frame_taxis_zero_point+309);
+  patient_dat.pert_resp(iexpr).cents4comp.pitch_in.dat{2} = pert_resp.cents4comp.pitch_in.dat{2}(:,pert_resp.frame_taxis_zero_point:pert_resp.frame_taxis_zero_point+309);
+  patient_dat.pert_resp(iexpr).cents4comp.pitch_in.dat{3} = pert_resp.cents4comp.pitch_in.dat{3}(:,pert_resp.frame_taxis_zero_point:pert_resp.frame_taxis_zero_point+309);
   patient_dat.n_good_trials(iexpr,:) = pert_resp.n_good_trials;
-  patient_dat.comp_resp(iexpr,:,:) = pert_resp.cents4comp.pitch_in.mean;
-  if iexpr == 1, patient_dat.frame_taxis = pert_resp.frame_taxis; end
+  patient_dat.comp_resp(iexpr,:,:) = pert_resp.cents4comp.pitch_in.mean(:,pert_resp.frame_taxis_zero_point:pert_resp.frame_taxis_zero_point+309);
+  if iexpr == 1, patient_dat.frame_taxis = pert_resp.frame_taxis(pert_resp.frame_taxis_zero_point:pert_resp.frame_taxis_zero_point+309); end
   for ipert = 1:2
     axes(hax(ipert));
     hpl = plot(patient_dat.frame_taxis,squeeze(patient_dat.comp_resp(iexpr,ipert,:)));
@@ -56,20 +79,28 @@ for iexpr = 1:nrows4patients
   if ~isempty(reply) && ~strcmp(reply,'y')
     patient_dat.is_good(iexpr) = 0;
   end
-  cd(curdir)
+  cd ..
 end
+cd ..
 
 fprintf('controls:\n');
+cd('Controls');
 for iexpr = 1:nrows4controls
-  cd(Controls);
   the_expr_dir = date_to_dir(txt,num,irows4controls,icol4date,icol4order,iexpr);
   cd(the_expr_dir);
   the_pert_resp_file = get_pert_resp_file();
   fprintf('load(the_pert_resp_file)...'); pause(0.2); load(the_pert_resp_file); fprintf('done\n');
-  control_dat.pert_resp(iexpr) = pert_resp;
+  control_dat.pert_resp(iexpr).nframeswin = 310;
+  control_dat.pert_resp(iexpr).n_good_trials = pert_resp.n_good_trials;
+  
+  pert_resp.frame_taxis_zero_point = dsearchn(pert_resp.frame_taxis',0)
+  
+  control_dat.pert_resp(iexpr).cents4comp.pitch_in.dat{1} = pert_resp.cents4comp.pitch_in.dat{1}(:,pert_resp.frame_taxis_zero_point:pert_resp.frame_taxis_zero_point+309);
+  control_dat.pert_resp(iexpr).cents4comp.pitch_in.dat{2} = pert_resp.cents4comp.pitch_in.dat{2}(:,pert_resp.frame_taxis_zero_point:pert_resp.frame_taxis_zero_point+309);
+  control_dat.pert_resp(iexpr).cents4comp.pitch_in.dat{3} = pert_resp.cents4comp.pitch_in.dat{3}(:,pert_resp.frame_taxis_zero_point:pert_resp.frame_taxis_zero_point+309);
   control_dat.n_good_trials(iexpr,:) = pert_resp.n_good_trials;
-  control_dat.comp_resp(iexpr,:,:) = pert_resp.cents4comp.pitch_in.mean;
-  if iexpr == 1, control_dat.frame_taxis = pert_resp.frame_taxis; end
+  control_dat.comp_resp(iexpr,:,:) = pert_resp.cents4comp.pitch_in.mean(:,pert_resp.frame_taxis_zero_point:pert_resp.frame_taxis_zero_point+309);
+  if iexpr == 1, control_dat.frame_taxis = pert_resp.frame_taxis(pert_resp.frame_taxis_zero_point:pert_resp.frame_taxis_zero_point+309); end
   for ipert = 1:2
     axes(hax(ipert));
     hpl = plot(control_dat.frame_taxis,squeeze(control_dat.comp_resp(iexpr,ipert,:)));
@@ -80,5 +111,8 @@ for iexpr = 1:nrows4controls
   if ~isempty(reply) && ~strcmp(reply,'y')
     control_dat.is_good(iexpr) = 0;
   end
-  cd(curdir)
+  cd ..
 end
+cd ..
+save('patient','patient_dat');
+save('control','control_dat');
