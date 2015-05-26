@@ -8,7 +8,8 @@ alphalev = 0.05;
 
 % tlims4anal_req = [0.1 0.9];
 % tlims4anal_req = [0.1 2.0];
-tlims4anal_req = [0.05 1.0];
+%tlims4anal_req = [0.05 1.0];
+tlims4anal_req = [-0.2 1.0];
 ilims4anal = dsearchn(frame_taxis',tlims4anal_req')';
 idxes4anal = ilims4anal(1):ilims4anal(2);
 tlims4anal = frame_taxis(ilims4anal);
@@ -165,9 +166,9 @@ for ipert = 1:nperts
   control_perttrial{ipert}.absmean = nanmean(control_perttrial{ipert}.absdat,1);
   control_perttrial{ipert}.absstde = nanstd(control_perttrial{ipert}.absdat,0,1)/sqrt(size(control_perttrial{ipert}.absdat,1));
 
-  % all_perttrial{ipert}.mean = nanmean([patient_perttrial{ipert}.mean; control_perttrial{ipert}.mean],1);
-    % all_perttrial{ipert}.mean = nanmean([patient_perttrial{ipert}.mean],1);
-      all_perttrial{ipert}.mean = nanmean([control_perttrial{ipert}.mean],1);
+   all_perttrial{ipert}.mean = nanmean([patient_perttrial{ipert}.mean; control_perttrial{ipert}.mean],1);
+%     all_perttrial{ipert}.mean = nanmean([patient_perttrial{ipert}.mean],1);
+%       all_perttrial{ipert}.mean = nanmean([control_perttrial{ipert}.mean],1);
 end
 
 patient_absperttrial.mean = nanmean(patient_absperttrial.dat,1);
